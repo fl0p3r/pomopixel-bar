@@ -53,6 +53,9 @@ Item {
     }
     onPrimaryColorChanged: spriteSheetCanvas.requestPaint()
     onSecondaryColorChanged: spriteSheetCanvas.requestPaint()
+    Component.onCompleted: {
+        if (spriteSheetCanvas.available) spriteSheetCanvas.requestPaint()
+    }
 
     // Viewport with clipping: hides all frames except current
     Item {
@@ -80,7 +83,7 @@ Item {
                 x: -root.animFrame * 32
                 y: 0
                 renderTarget: Canvas.Image
-                renderStrategy: Canvas.Immediate
+                onAvailableChanged: if (available) requestPaint()
 
                 onPaint: {
                     var ctx = getContext("2d")

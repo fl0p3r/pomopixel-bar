@@ -66,8 +66,10 @@ BarWidget {
         id: button
         anchors.fill: parent
         bar: root.bar
+        text: timerCore.formattedTime
+        keepSpace: true
         labelVisible: false
-        fixedWidth: contentRow.implicitWidth + button.scaledHorizontalMargin * 2
+        fixedWidth: contentRow.implicitWidth + Style.space(16)
         tooltipText: "Pomopixel: " + timerCore.modeName + " [" + timerCore.formattedTime + "]\n• Click: Open Panel\n• Right-click: Play/Pause\n• Middle-click: Reset"
         foreground: timerCore.isRunning
             ? (timerCore.mode === 0 ? timerCore.currentAccentColor : timerCore.green)

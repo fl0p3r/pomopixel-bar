@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
+  <!-- Background retro rounded card -->
+  <rect x="4" y="4" width="56" height="56" fill="#181825" stroke="#FF79C6" stroke-width="2"/>
+  
+  <!-- Mini Header -->
+  <rect x="12" y="10" width="40" height="4" fill="#FF79C6"/>
+  
+  <!-- Claude Critter in center -->
+  <rect x="20" y="24" width="24" height="6" fill="#E1875C"/>
+  <rect x="16" y="30" width="32" height="8" fill="#E1875C"/>
+  
+  <!-- Eyes -->
+  <rect x="24" y="26" width="3" height="5" fill="#11111B"/>
+  <rect x="37" y="26" width="3" height="5" fill="#11111B"/>
+  
+  <!-- 4 Feet -->
+  <rect x="22" y="38" width="3" height="6" fill="#E1875C"/>
+  <rect x="27" y="38" width="3" height="6" fill="#E1875C"/>
+  <rect x="34" y="38" width="3" height="6" fill="#E1875C"/>
+  <rect x="39" y="38" width="3" height="6" fill="#E1875C"/>
+  
+  <!-- Mini Progress bar -->
+  <rect x="12" y="48" width="40" height="4" fill="#313244"/>
+  <rect x="12" y="48" width="22" height="4" fill="#FF79C6"/>
+</svg>

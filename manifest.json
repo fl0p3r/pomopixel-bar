@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "pomopixel-bar",
+  "name": "Pomopixel Bar",
+  "version": "1.0.0",
+  "author": "floper",
+  "license": "MIT",
+  "homepage": "https://github.com/fl0p3r/pomopixel-bar",
+  "description": "Retro pixel-art Pomodoro bar widget with ticking timer, 32x32 animated mascots, and popout panel for Omarchy.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Pomopixel",
+    "description": "Retro Pomodoro timer with animated pixel mascot in the bar and full popout panel",
+    "category": "Productivity",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

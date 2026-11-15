@@ -33,7 +33,7 @@ BarWidget {
         if (panelLoader.item) panelLoader.item.closeForPopoutSwitch()
     }
 
-    readonly property real openPanelIndicatorWidth: button.labelWidth
+    readonly property real openPanelIndicatorWidth: contentRow.implicitWidth
 
     function injectPanel() {
         var target = panelLoader.item
@@ -66,13 +66,51 @@ BarWidget {
         id: button
         anchors.fill: parent
         bar: root.bar
-        text: timerCore.barText
+        labelVisible: false
+        fixedWidth: contentRow.implicitWidth + button.scaledHorizontalMargin * 2
         tooltipText: "Pomopixel: " + timerCore.modeName + " [" + timerCore.formattedTime + "]\n• Click: Open Panel\n• Right-click: Play/Pause\n• Middle-click: Reset"
         foreground: timerCore.isRunning
             ? (timerCore.mode === 0 ? timerCore.currentAccentColor : timerCore.green)
             : Commons.Color.foreground
         active: root.opened || timerCore.isRunning
         activeColor: timerCore.currentAccentColor
+
+        Row {
+            id: contentRow
+            anchors.centerIn: parent
+            spacing: Style.space(6)
+            scale: button.pressScale
+
+            BarMascot {
+                id: barMascot
+                anchors.verticalCenter: parent.verticalCenter
+                targetSize: 20
+                mascotType: timerCore.mascot
+                isResting: timerCore.isMascotResting
+                isRunning: timerCore.isRunning
+                primaryColor: timerCore.currentAccentColor
+                secondaryColor: timerCore.foreground
+                darkEyeColor: timerCore.darkerBackground
+                redColor: timerCore.red
+                greenColor: timerCore.green
+                yellowColor: timerCore.yellow
+                orangeColor: timerCore.orange
+                blueColor: timerCore.blue
+                cyanColor: timerCore.cyan
+            }
+
+            Text {
+                id: timeLabel
+                anchors.verticalCenter: parent.verticalCenter
+                text: timerCore.formattedTime
+                color: button.active && button.useActiveColor ? button.activeColor : button.foreground
+                font.family: root.bar ? root.bar.fontFamily : Style.font.family
+                font.pixelSize: Style.font.body
+                renderType: Text.NativeRendering
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
 
         onPressed: function(b) {
             if (b === Qt.RightButton) {

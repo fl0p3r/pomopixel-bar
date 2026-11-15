@@ -24,7 +24,7 @@ Item {
     Timer {
         id: animTimer
         interval: root.isResting ? 450 : 250
-        running: true
+        running: root.visible && root.opacity > 0
         repeat: true
         onTriggered: {
             root.animFrame = (root.animFrame + 1) % 4
@@ -49,6 +49,8 @@ Item {
         anchors.centerIn: parent
         width: 32 * root.pixelScale
         height: 32 * root.pixelScale
+        renderTarget: Canvas.Image
+        renderStrategy: Canvas.Immediate
 
         onPaint: {
             var ctx = getContext("2d")

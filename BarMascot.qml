@@ -25,12 +25,12 @@ Item {
     property int animFrame: 0
 
     // Ultra-lightweight animation timer:
-    // Only runs when the Pomodoro timer is running or resting.
-    // When paused/idle, stays on frame 0 to save 100% CPU/GPU resources.
+    // Only runs when the Pomodoro timer is running or resting AND visible.
+    // When paused/idle or screen off, stays on frame 0 to save 100% CPU/GPU resources.
     Timer {
         id: animTimer
         interval: root.isResting ? 550 : 380
-        running: root.isRunning || root.isResting
+        running: (root.isRunning || root.isResting) && root.visible
         repeat: true
         onTriggered: {
             root.animFrame = (root.animFrame + 1) % 4
@@ -127,14 +127,17 @@ Item {
                         for (var y = 0; y < 32; y++) {
                             var row = sprite[y]
                             if (!row) continue
-                            for (var x = 0; x < 32; x++) {
-                                var ch = row[x]
-                                if (ch !== '.') {
-                                    var col = pal[ch]
-                                    if (col) {
-                                        ctx.fillStyle = col
-                                        ctx.fillRect(xOffset + x, y, 1, 1)
+                            var startX = -1
+                            var lastCh = '.'
+                            for (var x = 0; x <= 32; x++) {
+                                var ch = x < 32 ? row[x] : '.'
+                                if (ch !== lastCh) {
+                                    if (lastCh !== '.' && pal[lastCh]) {
+                                        ctx.fillStyle = pal[lastCh]
+                                        ctx.fillRect(xOffset + startX, y, x - startX, 1)
                                     }
+                                    startX = x
+                                    lastCh = ch
                                 }
                             }
                         }

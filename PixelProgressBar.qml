@@ -19,14 +19,16 @@ Item {
         border.width: 1
 
         Row {
+            id: blockRow
             anchors.fill: parent
             anchors.margins: 2
             spacing: 2
+            readonly property real blockWidth: Math.max(2, (width - (root.blockCount - 1) * 2) / root.blockCount)
 
             Repeater {
                 model: root.blockCount
                 Rectangle {
-                    width: Math.max(2, (parent.width - (root.blockCount - 1) * 2) / root.blockCount)
+                    width: blockRow.blockWidth
                     height: parent.height
                     color: (index / root.blockCount) < root.progress ? root.activeColor : root.inactiveColor
                 }

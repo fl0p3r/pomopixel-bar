@@ -93,14 +93,17 @@ Item {
             for (var y = 0; y < 32; y++) {
                 var row = sprite[y]
                 if (!row) continue
-                for (var x = 0; x < 32; x++) {
-                    var ch = row[x]
-                    if (ch !== '.') {
-                        var col = pal[ch]
-                        if (col) {
-                            ctx.fillStyle = col
-                            ctx.fillRect(x * ps, y * ps, ps, ps)
+                var startX = -1
+                var lastCh = '.'
+                for (var x = 0; x <= 32; x++) {
+                    var ch = x < 32 ? row[x] : '.'
+                    if (ch !== lastCh) {
+                        if (lastCh !== '.' && pal[lastCh]) {
+                            ctx.fillStyle = pal[lastCh]
+                            ctx.fillRect(startX * ps, y * ps, (x - startX) * ps, ps)
                         }
+                        startX = x
+                        lastCh = ch
                     }
                 }
             }

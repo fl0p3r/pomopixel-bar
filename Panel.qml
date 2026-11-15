@@ -194,6 +194,7 @@ Panel {
 
                             Mascot {
                                 anchors.centerIn: parent
+                                visible: root.opened
                                 mascotType: root.timer ? root.timer.mascot : "blob"
                                 isResting: root.timer ? root.timer.isMascotResting : false
                                 pixelScale: 4

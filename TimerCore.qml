@@ -6,6 +6,8 @@ import qs.Commons as Commons
 Item {
     id: root
 
+    property var hostWidget: null
+
     // ==========================================
     // 1. THEME PALETTE (Synced with Omarchy colors.toml)
     // ==========================================
@@ -30,6 +32,7 @@ Item {
     readonly property string homeDir: Quickshell.env("HOME")
     readonly property string themeColorsPath: homeDir + "/.local/state/omarchy/current/theme/colors.toml"
     readonly property string configFilePath: homeDir + "/.config/pomopixel/config.json"
+    readonly property string stateFilePath: homeDir + "/.local/state/pomopixel/timer_state.json"
 
     FileView {
         id: themeWatcher
@@ -101,7 +104,7 @@ Item {
             if (data.mascot !== undefined) root.mascot = data.mascot
             if (data.customAccent !== undefined) root.customAccent = data.customAccent
 
-            if (!root.isRunning) {
+            if (!root.isRunning && root.targetEndTime <= 0) {
                 root.totalSeconds = root.getDurationForMode(root.mode) * 60
                 root.remainingSeconds = root.totalSeconds
             }
@@ -134,14 +137,78 @@ Item {
     }
 
     // ==========================================
-    // 3. TIMER STATE MACHINE
+    // 3. MULTI-MONITOR SYNCHRONIZED STATE
     // ==========================================
     property int mode: 0 // 0 = Focus, 1 = Short Break, 2 = Long Break
     property int remainingSeconds: 25 * 60
     property int totalSeconds: 25 * 60
     property bool isRunning: false
+    property real targetEndTime: 0
     property int completedCycles: 0
     property int todayCycles: 0
+
+    property bool isWritingState: false
+    property real lastCompletedTimestamp: 0
+
+    FileView {
+        id: stateWatcher
+        path: root.stateFilePath
+        watchChanges: true
+        printErrors: false
+        onLoaded: root.loadTimerState(text())
+        onFileChanged: reload()
+    }
+
+    function reloadState() {
+        stateWatcher.reload()
+    }
+
+    function loadTimerState(raw) {
+        if (!raw || isWritingState) return
+        try {
+            var data = JSON.parse(raw)
+            if (data.mode !== undefined) root.mode = data.mode
+            if (data.totalSeconds !== undefined) root.totalSeconds = data.totalSeconds
+            if (data.completedCycles !== undefined) root.completedCycles = data.completedCycles
+            if (data.todayCycles !== undefined) root.todayCycles = data.todayCycles
+            root.isRunning = data.isRunning === true
+            root.targetEndTime = data.targetEndTime || 0
+
+            if (root.isRunning && root.targetEndTime > 0) {
+                var now = Date.now()
+                var diff = Math.max(0, Math.ceil((root.targetEndTime - now) / 1000))
+                root.remainingSeconds = diff
+            } else if (data.remainingSeconds !== undefined) {
+                root.remainingSeconds = data.remainingSeconds
+            }
+        } catch(e) {}
+    }
+
+    function saveTimerState() {
+        isWritingState = true
+        var st = {
+            "mode": root.mode,
+            "isRunning": root.isRunning,
+            "targetEndTime": root.targetEndTime,
+            "remainingSeconds": root.remainingSeconds,
+            "totalSeconds": root.totalSeconds,
+            "completedCycles": root.completedCycles,
+            "todayCycles": root.todayCycles,
+            "updatedAt": Date.now()
+        }
+        var jsonStr = JSON.stringify(st, null, 2)
+        var cmd = "mkdir -p " + root.homeDir + "/.local/state/pomopixel && cat << 'EOF' > " + root.stateFilePath + "\n" + jsonStr + "\nEOF"
+        Quickshell.execDetached(["bash", "-c", cmd])
+
+        // Broadcast to all peer BarWidget instances across all connected monitors
+        if (root.hostWidget && typeof root.hostWidget.broadcast === "function") {
+            root.hostWidget.broadcast("reloadTimerState")
+        }
+
+        Qt.callLater(function() {
+            root.isWritingState = false
+        })
+    }
 
     readonly property string modeName: mode === 0 ? "FOCUS TIME" : (mode === 1 ? "SHORT BREAK" : "LONG BREAK")
     readonly property bool isMascotResting: mode === 1 || mode === 2
@@ -172,25 +239,32 @@ Item {
     function setMode(newMode) {
         mode = newMode
         isRunning = false
+        targetEndTime = 0
         totalSeconds = getDurationForMode(mode) * 60
         remainingSeconds = totalSeconds
         playClick()
+        saveTimerState()
     }
 
     function toggle() {
         if (isRunning) {
             isRunning = false
+            targetEndTime = 0
             playClick()
         } else {
             isRunning = true
+            targetEndTime = Date.now() + (remainingSeconds * 1000)
             playStart()
         }
+        saveTimerState()
     }
 
     function reset() {
         isRunning = false
+        targetEndTime = 0
         remainingSeconds = totalSeconds
         playClick()
+        saveTimerState()
     }
 
     function skip() {
@@ -198,13 +272,19 @@ Item {
             completedCycles++
             todayCycles++
             if (completedCycles % longBreakInterval === 0) {
-                setMode(2)
+                mode = 2
             } else {
-                setMode(1)
+                mode = 1
             }
         } else {
-            setMode(0)
+            mode = 0
         }
+        isRunning = false
+        targetEndTime = 0
+        totalSeconds = getDurationForMode(mode) * 60
+        remainingSeconds = totalSeconds
+        playClick()
+        saveTimerState()
     }
 
     Timer {
@@ -213,34 +293,58 @@ Item {
         repeat: true
         running: root.isRunning
         onTriggered: {
-            if (root.remainingSeconds > 0) {
-                root.remainingSeconds--
+            if (root.targetEndTime > 0) {
+                var now = Date.now()
+                var diff = Math.ceil((root.targetEndTime - now) / 1000)
+                if (diff > 0) {
+                    root.remainingSeconds = diff
+                } else {
+                    root.remainingSeconds = 0
+                    root.handleSessionCompleted()
+                }
             } else {
-                root.handleSessionCompleted()
+                if (root.remainingSeconds > 0) {
+                    root.remainingSeconds--
+                } else {
+                    root.handleSessionCompleted()
+                }
             }
         }
     }
 
     function handleSessionCompleted() {
+        var now = Date.now()
+        var isDuplicateCompletion = (now - root.lastCompletedTimestamp) < 3000
+        root.lastCompletedTimestamp = now
+
         root.isRunning = false
-        playFinish()
+        root.targetEndTime = 0
+
+        if (!isDuplicateCompletion) {
+            playFinish()
+        }
 
         if (root.mode === 0) {
             root.completedCycles++
             root.todayCycles++
-            sendNotification("Pomopixel Focus Complete!", "Great job! Time to take a well-deserved break.")
+            if (!isDuplicateCompletion) {
+                sendNotification("Pomopixel Focus Complete!", "Great job! Time to take a well-deserved break.")
+            }
             if (root.completedCycles % root.longBreakInterval === 0) {
                 root.mode = 2
             } else {
                 root.mode = 1
             }
         } else {
-            sendNotification("Pomopixel Break Finished!", "Break is over. Ready to jump back into focus?")
+            if (!isDuplicateCompletion) {
+                sendNotification("Pomopixel Break Finished!", "Break is over. Ready to jump back into focus?")
+            }
             root.mode = 0
         }
 
         root.totalSeconds = root.getDurationForMode(root.mode) * 60
         root.remainingSeconds = root.totalSeconds
+        saveTimerState()
     }
 
     // ==========================================

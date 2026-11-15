@@ -11,6 +11,11 @@ BarWidget {
 
     TimerCore {
         id: timerCore
+        hostWidget: root
+    }
+
+    function reloadTimerState() {
+        if (timerCore) timerCore.reloadState()
     }
 
     readonly property bool opened: panelLoader.item ? panelLoader.item.opened === true : false

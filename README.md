@@ -2,11 +2,13 @@
 
 Native retro pixel-art Pomodoro bar widget with ticking timer, 32×32 animated mascots, and popout panel for **Omarchy** (Arch Linux + Hyprland + Quickshell).
 
-![Pomopixel](preview.png)
+![Pomopixel Bar](preview.png)
 
 ## Features
 
-- **Live Status Bar Ticker**: Always see remaining focus time and session status right in your Omarchy status bar.
+- **Animated Mascot in Bar**: Your active mascot sits directly in the Omarchy status bar with lightweight, zero-GPU spritesheet animation.
+- **Live Status Bar Ticker**: Always see remaining focus time and session status in the bar.
+- **Multi-Monitor Synchronization**: Absolute timestamp sync (`Date.now()`) with peer `broadcast()` across all connected displays.
 - **Drop-Down Retro Popout Panel**: Click the bar icon to slide out the full pixel-art dashboard with large timer, segmented progress bar, controls, and animated mascots.
 - **32×32 Animated Mascots**:
   - 🥟 **Dumpling Blob**: Bouncing and sleeping blob from the retro aesthetic.
@@ -29,19 +31,28 @@ Native retro pixel-art Pomodoro bar widget with ticking timer, 32×32 animated m
   - `Middle Click`: Quick Reset
 - **Smooth Audio & Desktop Notifications**: Synthesized soft chimes for focus start/finish, with native `notify-send` integration.
 
-## Installation & Activation
+## Installation
 
-Symlink or copy this repository to your Omarchy plugins directory:
+Install directly via the Omarchy Plugin Manager:
 
 ```bash
-mkdir -p ~/.config/omarchy/plugins
-ln -s ~/Projects/pomopixel-bar ~/.config/omarchy/plugins/pomopixel-bar
+omarchy plugin add https://github.com/fl0p3r/pomopixel-bar --enable
 ```
 
-Enable the plugin in the bar:
+Or manually clone and enable:
 
 ```bash
-omarchy plugin enable pomopixel-bar right
+git clone https://github.com/fl0p3r/pomopixel-bar ~/.config/omarchy/plugins/pomopixel-bar
+omarchy plugin enable pomopixel-bar centerEnd
+```
+
+## Removal
+
+To disable and remove the plugin:
+
+```bash
+omarchy plugin disable pomopixel-bar
+rm -rf ~/.config/omarchy/plugins/pomopixel-bar
 ```
 
 ## Configuration
@@ -57,7 +68,7 @@ Settings are saved in `~/.config/pomopixel/config.json`:
   "soundEnabled": true,
   "volume": 1.0,
   "notificationsEnabled": true,
-  "mascot": "blob",
+  "mascot": "tux",
   "customAccent": ""
 }
 ```

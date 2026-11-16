@@ -383,8 +383,7 @@ Item {
         var validMascots = ["blob", "tux", "claude_critter", "ghost"]
         if (validMascots.indexOf(m) === -1) m = "blob"
 
-        var suffix = iconType ? iconType : "happy"
-        var iconFile = "assets/mascot_" + m + "_" + suffix + ".png"
+        var iconFile = "assets/mascot_" + m + ".png"
         var iconPath = Qt.resolvedUrl(iconFile).toString().replace("file://", "")
         Quickshell.execDetached(["notify-send", "-a", "Pomopixel", "-i", iconPath, title, message])
     }

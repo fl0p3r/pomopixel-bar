@@ -18,6 +18,6 @@
     "description": "Retro Pomodoro timer with animated pixel mascot in the bar and full popout panel",
     "category": "Productivity",
     "allowMultiple": false,
-    "defaultSection": "centerEnd"
+    "defaultSection": "right"
   }
 }

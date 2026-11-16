@@ -93,6 +93,9 @@ Item {
                     var m = root.mascotType
                     var rest = root.isResting
 
+                    var isClaude = (m === "claude_critter" || m === "claude")
+                    var isTux = (m === "tux")
+
                     var pal = {
                         '.': null,
                         'P': root.primaryColor,
@@ -101,14 +104,14 @@ Item {
                         'R': root.redColor,
                         'E': root.secondaryColor,
                         'W': "#F8F8FF",
-                        'K': root.darkEyeColor,
+                        'K': isTux ? "#111116" : (isClaude ? "#1A1A24" : root.darkEyeColor),
                         'B': "#20202C",
-                        'Y': root.yellowColor,
-                        'O': Qt.darker(root.yellowColor, 1.25),
-                        'C': root.cyanColor,
+                        'Y': isTux ? "#F5A623" : root.yellowColor,
+                        'O': isTux ? "#D4820A" : Qt.darker(root.yellowColor, 1.25),
+                        'C': isTux ? "#6a9589" : root.cyanColor,
                         'T': "#4A4A5E",
-                        'Z': root.secondaryColor,
-                        'A': root.orangeColor,
+                        'Z': isTux ? "#F5A623" : (isClaude ? "#E0D8FF" : root.secondaryColor),
+                        'A': isClaude ? "#D97757" : root.orangeColor,
                         'G': root.blueColor
                     }
 

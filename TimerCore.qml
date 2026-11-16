@@ -360,9 +360,16 @@ Item {
     function playStart() { playAudio("start.wav") }
     function playFinish() { playAudio("finish.wav") }
 
-    function sendNotification(title, message) {
+    function sendNotification(title, message, iconType) {
         if (!notificationsEnabled) return
-        var iconPath = Qt.resolvedUrl("assets/pomopixel-desktop.png").toString().replace("file://", "")
+        var m = root.mascot || "blob"
+        if (m === "claude") m = "claude_critter"
+        var validMascots = ["blob", "tux", "claude_critter", "ghost"]
+        if (validMascots.indexOf(m) === -1) m = "blob"
+
+        var suffix = iconType ? iconType : "happy"
+        var iconFile = "assets/mascot_" + m + "_" + suffix + ".png"
+        var iconPath = Qt.resolvedUrl(iconFile).toString().replace("file://", "")
         Quickshell.execDetached(["notify-send", "-a", "Pomopixel", "-i", iconPath, title, message])
     }
 }

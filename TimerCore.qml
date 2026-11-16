@@ -2,11 +2,20 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Commons as Commons
+import "TimerSync.js" as TimerSync
 
 Item {
     id: root
 
     property var hostWidget: null
+
+    function isPrimaryInstance() {
+        if (!root.hostWidget || !root.hostWidget.bar || typeof root.hostWidget.bar.moduleWidgets !== "function")
+            return true
+        var items = root.hostWidget.bar.moduleWidgets(root.hostWidget.moduleName)
+        if (!items || items.length === 0) return true
+        return items[0] === root.hostWidget
+    }
 
     // ==========================================
     // 1. THEME PALETTE (Synced with Omarchy colors.toml)
@@ -148,7 +157,6 @@ Item {
     property int todayCycles: 0
 
     property bool isWritingState: false
-    property real lastCompletedTimestamp: 0
 
     FileView {
         id: stateWatcher
@@ -314,31 +322,33 @@ Item {
 
     function handleSessionCompleted() {
         var now = Date.now()
-        var isDuplicateCompletion = (now - root.lastCompletedTimestamp) < 3000
-        root.lastCompletedTimestamp = now
+        var canClaim = TimerSync.tryClaimCompletion(now)
+        var isPrimary = root.isPrimaryInstance()
+
+        if (!canClaim && !isPrimary) {
+            // Secondary peer instance: the primary instance handles completion, notifications and saving state.
+            root.isRunning = false
+            root.targetEndTime = 0
+            root.remainingSeconds = 0
+            return
+        }
 
         root.isRunning = false
         root.targetEndTime = 0
 
-        if (!isDuplicateCompletion) {
-            playFinish()
-        }
+        playFinish()
 
         if (root.mode === 0) {
             root.completedCycles++
             root.todayCycles++
-            if (!isDuplicateCompletion) {
-                sendNotification("Pomopixel Focus Complete!", "Great job! Time to take a well-deserved break.")
-            }
+            sendNotification("Pomopixel Focus Complete!", "Great job! Time to take a well-deserved break.")
             if (root.completedCycles % root.longBreakInterval === 0) {
                 root.mode = 2
             } else {
                 root.mode = 1
             }
         } else {
-            if (!isDuplicateCompletion) {
-                sendNotification("Pomopixel Break Finished!", "Break is over. Ready to jump back into focus?")
-            }
+            sendNotification("Pomopixel Break Finished!", "Break is over. Ready to jump back into focus?")
             root.mode = 0
         }
 
@@ -352,6 +362,9 @@ Item {
     // ==========================================
     function playAudio(filename) {
         if (!soundEnabled) return
+        var now = Date.now()
+        if (filename === "finish.wav" && !TimerSync.tryClaimAudio(now)) return
+
         var soundPath = Qt.resolvedUrl("assets/" + filename).toString().replace("file://", "")
         Quickshell.execDetached(["pw-play", "--volume", String(root.volume), soundPath])
     }
@@ -362,6 +375,9 @@ Item {
 
     function sendNotification(title, message, iconType) {
         if (!notificationsEnabled) return
+        var now = Date.now()
+        if (!TimerSync.tryClaimNotification(now)) return
+
         var m = root.mascot || "blob"
         if (m === "claude") m = "claude_critter"
         var validMascots = ["blob", "tux", "claude_critter", "ghost"]
